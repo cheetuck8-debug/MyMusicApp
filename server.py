@@ -23,6 +23,18 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DL_DIR = os.path.join(BASE_DIR, "downloads")
 os.makedirs(DL_DIR, exist_ok=True)
 
+# 安全：cookies 通过 Render 加密环境变量 COOKIES_B64 注入（不进 Git 公开仓库）
+# 本地调试时可直接放 cookies.txt 文件
+COOKIES_B64 = os.environ.get("COOKIES_B64", "")
+if COOKIES_B64:
+    try:
+        import base64
+        with open(os.path.join(BASE_DIR, "cookies.txt"), "w", encoding="utf-8") as f:
+            f.write(base64.b64decode(COOKIES_B64).decode("utf-8"))
+        print("cookies.txt 已从环境变量写入")
+    except Exception as ex:
+        print("COOKIES_B64 解析失败:", ex)
+
 # 清理历史 mp3（超过 2 小时），避免占满磁盘
 MAX_AGE = 2 * 3600
 
@@ -121,18 +133,17 @@ def download_mp3(url):
         "no_warnings": True,
         "noplaylist": True,
         "outtmpl": outtmpl,
-        "format": "bestaudio/best",
+        "format": "bestaudio[ext=m4a]/bestaudio/best",
+        # tv_embedded 客户端：流不需 JS 签名，且不强制 cookies
+        "extractor_args": {"youtube": ["player_client=tv_embedded"]},
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
             "preferredquality": "192",
         }],
+        # 如果项目里有 cookies.txt，则用它（绕过 YouTube bot 检测）
+        "cookiefile": os.path.join(BASE_DIR, "cookies.txt") if os.path.exists(os.path.join(BASE_DIR, "cookies.txt")) else None,
     }
-    # 如果项目里有 cookies.txt，则用它（绕过 YouTube bot 检测）
-    cookies_path = os.path.join(BASE_DIR, "cookies.txt")
-    if os.path.exists(cookies_path):
-        dl_opts["cookiefile"] = cookies_path
-        info_opts["cookiefile"] = cookies_path
     with yt_dlp.YoutubeDL(dl_opts) as ydl:
         ydl.download([url])
 
