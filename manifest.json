@@ -1,0 +1,14 @@
+{
+  "name": "MyMusic 离线音乐",
+  "short_name": "MyMusic",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
+  "description": "离线音乐播放器：导入本地音乐，在线下载转 MP3，后台播放",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

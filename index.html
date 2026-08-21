@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MyMusic">
+<meta name="theme-color" content="#0f0f0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>MyMusic</title>
+<style>
+:root{
+  --bg:#0f0f0f; --card:#1c1c1e; --card2:#232326; --text:#f2f2f7;
+  --sub:#9a9aa0; --accent:#ff4d4d; --accent2:#ff6b6b; --border:#2c2c2e;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:120px;min-height:100vh}
+header{position:sticky;top:0;z-index:10;background:rgba(15,15,15,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:14px 16px calc(14px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+header .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#ff8a3d);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0}
+header h1{font-size:19px;font-weight:800;flex:1}
+header .badge{font-size:11px;color:var(--sub);font-weight:500}
+#gearBtn{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;padding:4px 6px;border-radius:8px}
+#gearBtn:active{background:var(--card2)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border-radius:18px;padding:22px;width:100%;max-width:340px}
+.modal h3{font-size:16px;margin-bottom:6px}
+.modal p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+.modal input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px}
+.modal input:focus{border-color:var(--accent)}
+.modal .row{display:flex;gap:8px}
+.modal .row button{flex:1;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-ghost{background:var(--card2);color:var(--sub)}
+.tabs{display:flex;gap:8px;padding:12px 16px 0}
+.tab{flex:1;text-align:center;padding:10px 0;border-radius:12px;background:var(--card);color:var(--sub);font-weight:600;font-size:14px;cursor:pointer;transition:.2s;border:1px solid transparent}
+.tab.active{background:var(--accent);color:#fff}
+main{padding:14px 16px}
+section{display:none}
+section.active{display:block}
+.upload-box{border:2px dashed var(--border);border-radius:16px;padding:30px 16px;text-align:center;color:var(--sub);font-size:14px;cursor:pointer;background:var(--card);transition:.2s}
+.upload-box:active{background:var(--card2)}
+.upload-box .big{font-size:34px;display:block;margin-bottom:8px}
+.section-title{font-size:13px;color:var(--sub);font-weight:700;letter-spacing:.5px;margin:20px 0 10px;text-transform:uppercase}
+.search-row{display:flex;gap:8px;margin-bottom:12px}
+.search-row input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--text);font-size:15px;outline:none}
+.search-row input:focus{border-color:var(--accent)}
+.search-row button{background:var(--accent);border:none;border-radius:12px;padding:0 20px;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+.song{display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:12px;cursor:pointer;transition:.15s}
+.song:active{background:var(--card)}
+.song .thumb{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#333,#222);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden}
+.song .thumb img{width:100%;height:100%;object-fit:cover}
+.song .info{flex:1;min-width:0}
+.song .title{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song .artist{font-size:12.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.song .dur{font-size:12px;color:var(--sub);flex-shrink:0}
+.song .actions{display:flex;gap:4px;flex-shrink:0}
+.icon-btn{background:none;border:none;color:var(--sub);font-size:16px;padding:6px;cursor:pointer;border-radius:8px}
+.icon-btn:active{background:var(--card2)}
+.icon-btn.done{color:#34c759}
+.now-playing{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));background:var(--card);border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px;box-shadow:0 -2px 20px rgba(0,0,0,.5);z-index:20;display:none}
+.now-playing .thumb{width:48px;height:48px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#333;display:flex;align-items:center;justify-content:center}
+.now-playing .thumb img{width:100%;height:100%;object-fit:cover}
+.now-playing .np-info{flex:1;min-width:0}
+.now-playing .np-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-playing .np-artist{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-controls{display:flex;align-items:center;gap:14px}
+.np-controls button{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1}
+.np-controls .play-pause{font-size:32px}
+.toast{position:fixed;top:calc(16px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(30,30,32,.95);color:#fff;padding:10px 18px;border-radius:20px;font-size:13.5px;z-index:99;opacity:0;transition:.3s;pointer-events:none;max-width:85vw;text-align:center}
+.toast.show{opacity:1}
+.empty{text-align:center;color:var(--sub);padding:50px 20px;font-size:14px;line-height:1.8}
+.progress{height:3px;background:var(--border);border-radius:2px;flex:1;margin:0 4px;position:relative;overflow:hidden}
+.progress .fill{height:100%;background:var(--accent);border-radius:2px;width:0%}
+.np-time{font-size:11px;color:var(--sub);flex-shrink:0;min-width:32px;text-align:center}
+.dl-status{font-size:11.5px;color:var(--sub);padding:2px 0 10px;display:none}
+.dl-status.show{display:block}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--sub);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">♪</div>
+  <h1>MyMusic</h1>
+  <span class="badge">离线 · 后台播放</span>
+  <button id="gearBtn" title="设置">⚙️</button>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="library">🎵 我的音乐</div>
+  <div class="tab" data-tab="download">⬇️ 在线下载</div>
+</div>
+
+<main>
+  <!-- 本地音乐库 -->
+  <section id="library" class="active">
+    <div class="upload-box" id="uploadBox">
+      <span class="big">🎧</span>
+      点击导入音乐文件<br><small>支持 MP3 / M4A / WAV，存到手机离线听</small>
+    </div>
+    <input type="file" id="fileInput" accept="audio/*" multiple hidden>
+    <div id="libList"></div>
+  </section>
+
+  <!-- 在线下载 -->
+  <section id="download">
+    <div class="search-row">
+      <input id="searchInput" type="text" placeholder="搜索歌曲，或粘贴 YouTube 链接…">
+      <button id="searchBtn">搜索</button>
+    </div>
+    <div class="dl-status" id="dlStatus"></div>
+    <div id="dlList"></div>
+  </section>
+</main>
+
+<!-- 底部播放器 -->
+<div class="now-playing" id="nowPlaying">
+  <div class="thumb" id="npThumb"><img src="" alt=""></div>
+  <div class="np-info">
+    <div class="np-title" id="npTitle">—</div>
+    <div class="np-artist" id="npArtist">—</div>
+    <div style="display:flex;align-items:center;margin-top:6px">
+      <span class="np-time" id="npCur">0:00</span>
+      <div class="progress"><div class="fill" id="npFill"></div></div>
+      <span class="np-time" id="npDur">0:00</span>
+    </div>
+  </div>
+  <div class="np-controls">
+    <button id="btnPrev">⏮</button>
+    <button class="play-pause" id="btnPlay">▶️</button>
+    <button id="btnNext">⏭</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 设置弹窗 -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <h3>⚙️ 下载服务器设置</h3>
+    <p>下载新歌需要电脑运行后端（双击 start_server.bat）。<br>填写电脑的地址：<code>http://电脑IP:8800</code>（ipconfig 查看 IPv4）<br>部署在云端时填局域网 IP；本地使用时保持默认。</p>
+    <input id="apiBaseInput" type="text" placeholder="http://192.168.1.5:8800">
+    <div class="row">
+      <button class="btn-primary" id="saveApiBtn">保存</button>
+      <button class="btn-ghost" id="resetApiBtn">恢复默认</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
