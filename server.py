@@ -128,6 +128,11 @@ def download_mp3(url):
             "preferredquality": "192",
         }],
     }
+    # 如果项目里有 cookies.txt，则用它（绕过 YouTube bot 检测）
+    cookies_path = os.path.join(BASE_DIR, "cookies.txt")
+    if os.path.exists(cookies_path):
+        dl_opts["cookiefile"] = cookies_path
+        info_opts["cookiefile"] = cookies_path
     with yt_dlp.YoutubeDL(dl_opts) as ydl:
         ydl.download([url])
 
