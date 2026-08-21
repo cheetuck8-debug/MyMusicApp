@@ -47,6 +47,43 @@ SEARCH_OPTS = {
 
 
 def search_youtube(q, limit=6):
+    """搜索 YouTube。优先用 Piped API（云服务器 IP 不被 YouTube 封锁），失败则回退 yt-dlp 搜索。"""
+    # 方法 1: Piped API（第三方前端，数据中心 IP 可用）
+    piped_instances = [
+        "https://pipedapi.kavin.rocks",
+        "https://api.piped.private.coffee",
+        "https://pipedapi.adminforge.de",
+    ]
+    import urllib.request
+
+    for base in piped_instances:
+        try:
+            url = f"{base}/search?q={urllib.parse.quote(q)}&filter=videos"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            results = []
+            for item in (data.get("items") or [])[:limit]:
+                if not item.get("url"):
+                    continue
+                # Piped 的 url 形如 /watch?v=ID
+                vid = item["url"].split("v=")[-1]
+                dur = item.get("duration") or 0
+                if dur and dur > 3600:
+                    continue
+                results.append({
+                    "url": f"https://www.youtube.com/watch?v={vid}",
+                    "title": item.get("title") or "",
+                    "artist": item.get("uploaderName") or item.get("uploader") or "",
+                    "duration": dur,
+                    "thumb": item.get("thumbnail") or "",
+                })
+            if results:
+                return results
+        except Exception:
+            continue
+
+    # 方法 2: yt-dlp 搜索（本地/家宽 IP 可用）
     with yt_dlp.YoutubeDL(SEARCH_OPTS) as ydl:
         info = ydl.extract_info(f"ytsearch{limit}:{q}", download=False)
     results = []
@@ -54,7 +91,6 @@ def search_youtube(q, limit=6):
         if not e or not e.get("id"):
             continue
         dur = e.get("duration") or 0
-        # 跳过超长视频（可能是播客/整张专辑），1 小时上限
         if dur and dur > 3600:
             continue
         results.append({
