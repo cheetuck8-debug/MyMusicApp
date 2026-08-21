@@ -16,8 +16,9 @@ from urllib.parse import urlparse, parse_qs
 
 import yt_dlp
 
+# 云端（Render）会用环境变量注入 PORT；本地默认 8800
 HOST = "0.0.0.0"
-PORT = 8800
+PORT = int(os.environ.get("PORT", "8800"))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DL_DIR = os.path.join(BASE_DIR, "downloads")
 os.makedirs(DL_DIR, exist_ok=True)

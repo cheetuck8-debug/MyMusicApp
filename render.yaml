@@ -1,0 +1,9 @@
+# Render Blueprint — 在 render.com 用 GitHub 仓库一键部署
+services:
+  - type: web
+    name: mymusic-backend
+    runtime: docker
+    plan: free
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
